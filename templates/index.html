@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieMax Studio | Next Level Cinema</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=DM+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020408;
+      --accent: #1e6fff;
+      --gold: #f59e0b;
+      --text: #ffffff;
+      --muted: #8c9bb0;
+      --card: #0a0e17;
+      --border: rgba(255,255,255,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 5%;
+      background: rgba(2,4,8,0.96);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
+    }
+    nav.scrolled { padding: 0.75rem 5%; }
+    .brand { font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 2px; text-decoration: none; color: white; display: flex; align-items: center; }
+    .brand span { color: var(--accent); }
+    .nav-center { display: flex; gap: 28px; list-style: none; }
+    .nav-center a { font-size: 13px; color: var(--muted); text-decoration: none; letter-spacing: 0.05em; transition: color 0.2s; }
+    .nav-center a:hover, .nav-center a.active { color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 20px; padding: 7px 16px; transition: border-color 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-box input { background: transparent; border: none; outline: none; color: #fff; font-size: 13px; width: 160px; }
+    .search-box input::placeholder { color: var(--muted); }
+    .btn-admin {
+      font-family: 'DM Mono'; font-size: 11px; letter-spacing: 0.1em;
+      padding: 8px 18px; border: 1px solid var(--accent);
+      border-radius: 4px; color: var(--accent); text-decoration: none; transition: all 0.2s;
+    }
+    .btn-admin:hover { background: var(--accent); color: #fff; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .hamburger span { width: 22px; height: 2px; background: var(--muted); border-radius: 2px; transition: all 0.25s; }
+    .mobile-menu {
+      display: none; position: fixed; top: 60px; left: 0; width: 100%; z-index: 999;
+      background: rgba(2,4,8,0.98); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border); padding: 1.5rem 5%;
+      flex-direction: column; gap: 1rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { font-size: 15px; color: var(--muted); text-decoration: none; padding: 6px 0; border-bottom: 1px solid var(--border); }
+
+    /* ── HERO ── */
+    .hero {
+      height: 88vh; display: flex; align-items: center;
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #020408 0%, #060d1f 30%, #0a1628 50%, #060d1f 70%, #020408 100%);
+      margin-top: 60px;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background:
+        radial-gradient(ellipse at 15% 50%, rgba(30,111,255,0.2) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 30%, rgba(99,102,241,0.13) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 90%, rgba(56,189,248,0.09) 0%, transparent 45%),
+        radial-gradient(ellipse at 70% 60%, rgba(245,158,11,0.05) 0%, transparent 40%);
+    }
+    .hero::after {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse at center, rgba(2,4,8,0.55) 0%, rgba(2,4,8,0.92) 100%);
+    }
+    /* Poster collage strips */
+    .poster-strip {
+      position: absolute; top: 0; bottom: 0; z-index: 0;
+      display: flex; flex-direction: column; gap: 6px;
+      overflow: hidden; opacity: 0.18;
+    }
+    .poster-strip.left  { left: 0; width: 22%; }
+    .poster-strip.right { right: 0; width: 22%; }
+    .poster-strip.mid-left  { left: 21%; width: 14%; opacity: 0.08; }
+    .poster-strip.mid-right { right: 21%; width: 14%; opacity: 0.08; }
+    .poster-tile {
+      flex-shrink: 0; border-radius: 6px; overflow: hidden;
+      background: #0a1628;
+    }
+    .poster-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .poster-tile-ph {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; opacity: 0.5;
+    }
+    .hero-content {
+      position: relative; z-index: 3;
+      width: 100%; text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0 5%;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'DM Mono'; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 20px;
+      opacity: 0; animation: fadeUp 0.7s 0.3s ease forwards;
+    }
+    .hero-badge::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+    .hero-badge::after  { content: ''; width: 32px; height: 1px; background: var(--accent); }
+    .hero h1 {
+      font-family: 'Bebas Neue'; font-size: clamp(3.5rem, 9vw, 8rem);
+      letter-spacing: 4px; line-height: 0.88; margin-bottom: 28px;
+      opacity: 0; animation: fadeUp 0.7s 0.5s ease forwards;
+    }
+    .hero h1 em {
+      font-style: normal; color: var(--accent); display: inline-block;
+      text-shadow: 0 0 80px var(--accent), 0 0 160px var(--accent);
+      position: relative;
+    }
+    .hero h1 em::after {
+      content: ''; display: block; width: 60%; height: 3px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      margin: 4px auto 0; border-radius: 2px;
+    }
+    .hero-desc {
+      font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.8;
+      margin-bottom: 40px; max-width: 520px; text-align: center;
+      opacity: 0; animation: fadeUp 0.7s 0.7s ease forwards;
+    }
+    .hero-btns {
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      opacity: 0; animation: fadeUp 0.7s 0.9s ease forwards;
+    }
+    .btn-fill { padding: 13px 32px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-fill:hover { background: #3d7fff; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(30,111,255,0.4); }
+    .btn-gold {
+      padding: 13px 30px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-gold:hover { background: rgba(245,158,11,0.18); border-color: var(--gold); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── STATS ── */
+    .stats-bar {
+      display: flex; justify-content: center;
+      background: #050810; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .stat-item { flex: 1; min-width: 140px; padding: 28px 20px; text-align: center; border-right: 1px solid var(--border); transition: background 0.2s; cursor: default; }
+    .stat-item:last-child { border-right: none; }
+    .stat-item:hover { background: rgba(30,111,255,0.05); }
+    .stat-num { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── SECTION ── */
+    .section { padding: 72px 5%; max-width: 1500px; margin: 0 auto; }
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; }
+    .section-label { font-family: 'DM Mono'; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 8px; }
+    .section-title { font-family: 'Bebas Neue'; font-size: clamp(26px, 3.5vw, 40px); letter-spacing: 0.03em; }
+    .view-all { font-size: 13px; color: var(--accent); text-decoration: none; font-family: 'DM Mono'; transition: opacity 0.2s; }
+    .view-all:hover { opacity: 0.7; }
+
+    /* Filter */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+    .filter-btn {
+      font-family: 'DM Mono'; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 7px 18px; border: 1px solid var(--border); border-radius: 20px;
+      background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── MOVIE GRID ── */
+    .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+    .movie-card {
+      background: var(--card); border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.3s, box-shadow 0.3s;
+      position: relative; opacity: 0; animation: cardIn 0.5s ease forwards;
+    }
+    @keyframes cardIn { to { opacity: 1; } }
+    .movie-card:hover { transform: translateY(-8px); border-color: rgba(30,111,255,0.5); box-shadow: 0 20px 48px rgba(0,0,0,0.7); }
+    .img-box { position: relative; height: 380px; overflow: hidden; }
+    .img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s, filter 0.4s; display: block; }
+    .movie-card:hover .img-box img { filter: brightness(0.15); transform: scale(1.06); }
+    .img-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; transition: filter 0.4s; }
+    .movie-card:hover .img-placeholder { filter: brightness(0.15); }
+    .ph-icon { font-size: 52px; margin-bottom: 14px; opacity: 0.6; }
+    .ph-title { font-family: 'Bebas Neue'; font-size: 20px; color: rgba(255,255,255,0.75); letter-spacing: 0.05em; line-height: 1.2; margin-bottom: 8px; }
+    .ph-genre { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .overlay-content {
+      position: absolute; inset: 0; padding: 24px;
+      display: flex; flex-direction: column; justify-content: center;
+      opacity: 0; transition: opacity 0.4s; z-index: 2;
+    }
+    .movie-card:hover .overlay-content { opacity: 1; }
+    .overlay-rating { font-family: 'Bebas Neue'; font-size: 36px; color: #f59e0b; margin-bottom: 4px; line-height: 1; }
+    .overlay-rating-label { font-family: 'DM Mono'; font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; margin-bottom: 14px; }
+    .overlay-desc { font-size: 13px; color: #e2e8f0; line-height: 1.65; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .overlay-meta { display: flex; gap: 12px; margin-bottom: 18px; font-size: 12px; color: rgba(255,255,255,0.5); font-family: 'DM Mono'; }
+    .overlay-btn { padding: 10px 22px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; align-self: flex-start; transition: background 0.2s; }
+    .overlay-btn:hover { background: #3d7fff; }
+    .card-footer { padding: 16px 18px; }
+    .meta-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .genre-tag { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; font-weight: 600; }
+    .card-badge { font-family: 'DM Mono'; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; }
+    .card-title { font-family: 'Bebas Neue'; font-size: 24px; color: #fff; margin-bottom: 6px; letter-spacing: 0.02em; }
+    .card-meta { display: flex; gap: 10px; color: var(--muted); font-size: 12px; align-items: center; }
+    .dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; flex-shrink: 0; }
+    .card-director { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'DM Mono'; letter-spacing: 0.05em; }
+    .movie-loading { grid-column: 1/-1; text-align: center; padding: 80px; color: var(--muted); font-family: 'DM Mono'; font-size: 13px; letter-spacing: 0.1em; }
+    .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .no-results { grid-column: 1/-1; text-align: center; padding: 60px; }
+    .no-results .nr-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .no-results p { color: var(--muted); font-family: 'DM Mono'; font-size: 13px; letter-spacing: 0.1em; }
+
+    /* ── FEATURED SECTION — ШИНЭ ДИЗАЙН ── */
+    .featured-section {
+      padding: 80px 5%;
+      background: linear-gradient(180deg, #050810 0%, #020408 100%);
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .featured-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(30,111,255,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .featured-inner { max-width: 1500px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* Tabs — шинэ дизайн */
+    .featured-tabs {
+      display: flex; gap: 6px; margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      font-family: 'DM Mono'; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 10px 20px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; transition: all 0.25s;
+      display: flex; align-items: center; gap: 8px; white-space: nowrap;
+    }
+    .tab-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; background: rgba(255,255,255,0.07); }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tab-btn.active.oscar-tab  { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.5); color: var(--gold); }
+    .tab-btn.active.anime-tab  { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.5); color: #a78bfa; }
+    .tab-btn.active.disney-tab { background: rgba(56,189,248,0.15);  border-color: rgba(56,189,248,0.5);  color: #38bdf8; }
+    .tab-btn.active.thriller-tab { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.5);   color: #ef4444; }
+    .tab-count {
+      font-size: 10px; background: rgba(255,255,255,0.1);
+      padding: 2px 7px; border-radius: 10px; min-width: 22px; text-align: center;
+    }
+
+    /* Featured grid — шинэ layout */
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 14px;
+    }
+    .featured-card {
+      position: relative; border-radius: 10px; overflow: hidden;
+      aspect-ratio: 2/3; cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s, border-color 0.3s;
+    }
+    .featured-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 24px 56px rgba(0,0,0,0.85);
+      z-index: 2; border-color: rgba(255,255,255,0.25);
+    }
+
+    /* Placeholder — gradient + icon */
+    .fc-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding: 20px 16px; position: relative;
+    }
+    .fc-bg-icon {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      font-size: 56px; opacity: 0.25; pointer-events: none;
+      filter: blur(1px);
+    }
+    .fc-line { width: 28px; height: 2px; border-radius: 2px; margin-bottom: 10px; }
+    .fc-title-text {
+      font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 0.05em;
+      line-height: 1.15; color: rgba(255,255,255,0.9); text-align: center; margin-bottom: 6px;
+    }
+    .fc-sub-text {
+      font-family: 'DM Mono'; font-size: 9px; letter-spacing: 0.12em;
+      text-transform: uppercase; opacity: 0.5; text-align: center;
+    }
+
+    /* Overlay */
+    .featured-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 14px; transition: background 0.3s;
+    }
+    .featured-card:hover .featured-overlay {
+      background: linear-gradient(to top, rgba(0,0,0,0.99) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+    }
+    .fo-stars { color: #f59e0b; font-size: 11px; margin-bottom: 3px; letter-spacing: 1px; }
+    .fo-rating { font-family: 'Bebas Neue'; font-size: 22px; color: #f59e0b; line-height: 1; }
+    .fo-title { font-family: 'Bebas Neue'; font-size: 15px; color: #fff; letter-spacing: 0.04em; margin-top: 2px; line-height: 1.1; }
+    .fo-year { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; font-family: 'DM Mono'; }
+
+    /* Badge + rank */
+    .fo-badge {
+      position: absolute; top: 10px; left: 10px;
+      font-family: 'DM Mono'; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 4px; font-weight: 700; backdrop-filter: blur(8px);
+    }
+    .fo-rank {
+      position: absolute; top: 10px; right: 10px;
+      font-family: 'Bebas Neue'; font-size: 28px; color: rgba(255,255,255,0.12);
+      line-height: 1;
+    }
+
+    /* Hover reveal — дэлгэрэнгүй */
+    .fo-hover-info {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .featured-card:hover .fo-hover-info { opacity: 1; }
+    .fo-play-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+      transform: scale(0.8); transition: transform 0.3s;
+    }
+    .featured-card:hover .fo-play-btn { transform: scale(1); }
+
+    /* ── FOOTER ── */
+    footer { padding: 36px 5%; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); background: #000; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { font-family: 'Bebas Neue'; font-size: 20px; color: white; }
+    .footer-brand span { color: var(--accent); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 12px; color: #444; text-decoration: none; font-family: 'DM Mono'; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--muted); }
+    .footer-copy { font-size: 12px; color: #333; font-family: 'DM Mono'; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+      background: #0a0e17; border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 20px; font-size: 13px; color: #fff;
+      display: flex; align-items: center; gap: 10px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 16px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0.9rem 5%; }
+      .nav-center, .search-box { display: none; }
+      .hamburger { display: flex; }
+      .hero { height: auto; min-height: 75vh; padding: 80px 0 40px; }
+      .section { padding: 48px 4%; }
+      .featured-section { padding: 52px 4%; }
+      .movie-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+      .featured-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+      .section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+      footer { flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="main-nav">
+    <a href="/" class="brand">MOVIE<span>MAX</span></a>
+    <ul class="nav-center">
+      <li><a href="#" class="active">Нүүр</a></li>
+      <li><a href="#movies">Кинонууд</a></li>
+      <li><a href="#featured">Онцлох</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="search-box">
+        <svg width="13" height="13" fill="none" stroke="#8c9bb0" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Кино, найруулагч..." id="search-input">
+      </div>
+      <a href="/admin/login" class="btn-admin">ADMIN</a>
+    </div>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#">Нүүр</a>
+    <a href="#movies" onclick="toggleMenu()">Кинонууд</a>
+    <a href="#featured" onclick="toggleMenu()">Онцлох</a>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input type="text" placeholder="Кино хайх..." id="mob-search"
+        style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;outline:none;">
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <canvas id="star-canvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0.55;"></canvas>
+    <div class="hero-content">
+      <div class="hero-badge">Welcome to MovieMax Studio</div>
+      <h1>THE <em>MAX</em><br>EXPERIENCE</h1>
+      <p class="hero-desc">Дэлхийн шилдэг кино, аниме, Disney-ийн бүтээлүүд болон Оскарт нэр дэвшсэн уран бүтээлүүдийн мэдээллийг нэг дороос аваарай.</p>
+      <div class="hero-btns">
+        <a href="#movies" class="btn-fill">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          Кино үзэх
+        </a>
+        <a href="#featured" class="btn-gold">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+          Онцлох кино
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS — зөвхөн кино тоо -->
+  <div class="stats-bar">
+    <div class="stat-item" style="max-width:300px;flex:none;margin:0 auto;">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Нийт Кинонууд</div>
+    </div>
+  </div>
+
+  <!-- MOVIES (API) -->
+  <div class="section" id="movies">
+    <div class="section-head">
+      <div>
+        <div class="section-label" style="color:var(--accent)">Our Collection</div>
+        <div class="section-title">FEATURED PROJECTS</div>
+      </div>
+      <a href="#" class="view-all">Бүгдийг үзэх →</a>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" data-genre="all">Бүгд</button>
+    </div>
+    <div class="movie-grid" id="movie-grid">
+      <div class="movie-loading"><div class="spinner"></div>АЧААЛЛАЖ БАЙНА...</div>
+    </div>
+  </div>
+
+  <!-- FEATURED TABS — ШИНЭ ДИЗАЙН -->
+  <div class="featured-section" id="featured">
+    <div class="featured-inner">
+      <div class="section-head" style="margin-bottom:28px">
+        <div>
+          <div class="section-label" style="color:var(--gold)">Онцлох Бүтээлүүд</div>
+          <div class="section-title">Шилдэг Цуглуулга</div>
+        </div>
+      </div>
+      <div class="featured-tabs" id="featured-tabs">
+        <button class="tab-btn oscar-tab active" data-tab="oscar">🏆 Оскар <span class="tab-count">8</span></button>
+        <button class="tab-btn anime-tab" data-tab="anime">✨ Шилдэг Аниме <span class="tab-count">8</span></button>
+        <button class="tab-btn disney-tab" data-tab="disney">🏰 Disney & Pixar <span class="tab-count">8</span></button>
+        <button class="tab-btn thriller-tab" data-tab="thriller">🔥 Thriller <span class="tab-count">7</span></button>
+      </div>
+      <div class="featured-grid" id="featured-grid"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">MOVIE<span>MAX</span></div>
+    <div class="footer-links">
+      <a href="#">Нүүр</a>
+      <a href="#movies">Кинонууд</a>
+      <a href="#featured">Онцлох</a>
+    </div>
+    <p class="footer-copy">© 2026 MOVIEMAX Studio.</p>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">🎬</span>
+    <span id="toast-msg">Кино нэмэгдлээ</span>
+  </div>
+
+  <script>
+    const genreConfig = {
+      'Action':    { bg: 'linear-gradient(135deg,#1a0505,#2d0a0a)', color: '#ef4444', icon: '⚡' },
+      'Drama':     { bg: 'linear-gradient(135deg,#051a0a,#0a2d14)', color: '#10b981', icon: '🎭' },
+      'Sci-Fi':    { bg: 'linear-gradient(135deg,#05051a,#0a0a2d)', color: '#3b82f6', icon: '🚀' },
+      'Thriller':  { bg: 'linear-gradient(135deg,#1a1205,#2d1f0a)', color: '#f59e0b', icon: '🔥' },
+      'Anime':     { bg: 'linear-gradient(135deg,#1a051a,#2d0a2d)', color: '#a78bfa', icon: '✨' },
+      'Animation': { bg: 'linear-gradient(135deg,#05101a,#0a1f2d)', color: '#38bdf8', icon: '🏰' },
+      'Comedy':    { bg: 'linear-gradient(135deg,#1a0f05,#2d1a0a)', color: '#fb923c', icon: '😄' },
+      'Horror':    { bg: 'linear-gradient(135deg,#0d0505,#1a0808)', color: '#dc2626', icon: '👻' },
+    };
+
+    const featuredData = {
+      oscar: [
+        { title:"Oppenheimer",       year:2023, rating:9.6, icon:"⚛️",  color:"#f59e0b", sub:"Best Picture 2024", bg:"linear-gradient(135deg,#1a0a2e,#0d1a3a)" },
+        { title:"Parasite",          year:2019, rating:8.5, icon:"🏆",  color:"#f59e0b", sub:"Best Picture 2020", bg:"linear-gradient(135deg,#1a1205,#2d1f0a)" },
+        { title:"Poor Things",       year:2023, rating:8.0, icon:"🌿",  color:"#10b981", sub:"Best Picture 2024", bg:"linear-gradient(135deg,#0d2a1a,#0a1a10)" },
+        { title:"The Shape of Water",year:2017, rating:7.3, icon:"🌊",  color:"#38bdf8", sub:"Best Picture 2018", bg:"linear-gradient(135deg,#05101a,#0a1f2d)" },
+        { title:"Moonlight",         year:2016, rating:7.4, icon:"🌙",  color:"#818cf8", sub:"Best Picture 2017", bg:"linear-gradient(135deg,#05051a,#10102d)" },
+        { title:"12 Years a Slave",  year:2013, rating:8.1, icon:"⛓️", color:"#f59e0b", sub:"Best Picture 2014", bg:"linear-gradient(135deg,#1a0d05,#2d1a0a)" },
+        { title:"Argo",              year:2012, rating:7.7, icon:"📽️",  color:"#6b7280", sub:"Best Picture 2013", bg:"linear-gradient(135deg,#0a0a0a,#1a1a1a)" },
+        { title:"The Artist",        year:2011, rating:7.9, icon:"🎞️",  color:"#d1d5db", sub:"Best Picture 2012", bg:"linear-gradient(135deg,#0d0d0d,#1f1f1f)" },
+      ],
+      anime: [
+        { title:"Spirited Away",       year:2001, rating:9.4, icon:"🌊",  color:"#a78bfa", sub:"Studio Ghibli",     bg:"linear-gradient(135deg,#1a051a,#2d0a2d)" },
+        { title:"Your Name",           year:2016, rating:8.9, icon:"🌠",  color:"#818cf8", sub:"Makoto Shinkai",    bg:"linear-gradient(135deg,#05051a,#0a0a2d)" },
+        { title:"Demon Slayer",        year:2021, rating:8.2, icon:"⚔️",  color:"#ef4444", sub:"Ufotable",          bg:"linear-gradient(135deg,#1a0505,#2d0a0a)" },
+        { title:"Attack on Titan",     year:2013, rating:9.1, icon:"🗡️",  color:"#6b7280", sub:"MAPPA / Wit",       bg:"linear-gradient(135deg,#0a0a0a,#1a1a1a)" },
+        { title:"Princess Mononoke",   year:1997, rating:8.4, icon:"🐺",  color:"#10b981", sub:"Studio Ghibli",     bg:"linear-gradient(135deg,#051a0a,#0a2d10)" },
+        { title:"Jujutsu Kaisen 0",    year:2021, rating:8.1, icon:"🔮",  color:"#8b5cf6", sub:"MAPPA",             bg:"linear-gradient(135deg,#0d051a,#1a0a2d)" },
+        { title:"One Piece Film: Red", year:2022, rating:7.6, icon:"🏴‍☠️", color:"#f59e0b", sub:"Toei Animation",   bg:"linear-gradient(135deg,#1a1205,#2d1f0a)" },
+        { title:"Akira",               year:1988, rating:8.0, icon:"🏍️",  color:"#ef4444", sub:"TMS Entertainment", bg:"linear-gradient(135deg,#1a0505,#0a0a1a)" },
+      ],
+      disney: [
+        { title:"Coco",          year:2017, rating:8.4, icon:"🎸", color:"#f97316", sub:"Pixar",       bg:"linear-gradient(135deg,#1a0905,#2d150a)" },
+        { title:"Soul",          year:2020, rating:8.1, icon:"🎵", color:"#10b981", sub:"Pixar",       bg:"linear-gradient(135deg,#051a10,#0a2d1a)" },
+        { title:"Up",            year:2009, rating:8.3, icon:"🎈", color:"#38bdf8", sub:"Pixar",       bg:"linear-gradient(135deg,#05101a,#0a1f2d)" },
+        { title:"The Lion King", year:1994, rating:8.5, icon:"🦁", color:"#f59e0b", sub:"Walt Disney", bg:"linear-gradient(135deg,#1a1200,#2d1e00)" },
+        { title:"Encanto",       year:2021, rating:7.2, icon:"🌸", color:"#e879f9", sub:"Walt Disney", bg:"linear-gradient(135deg,#1a0f05,#2d1a08)" },
+        { title:"Moana",         year:2016, rating:7.6, icon:"🌊", color:"#38bdf8", sub:"Walt Disney", bg:"linear-gradient(135deg,#05101a,#0a1f2d)" },
+        { title:"Frozen II",     year:2019, rating:6.8, icon:"❄️", color:"#93c5fd", sub:"Walt Disney", bg:"linear-gradient(135deg,#05051a,#0a0f2d)" },
+        { title:"Ratatouille",   year:2007, rating:8.1, icon:"🐭", color:"#a3e635", sub:"Pixar",       bg:"linear-gradient(135deg,#0f1a05,#1a2d0a)" },
+      ],
+      thriller: [
+        { title:"The Dark Knight", year:2008, rating:9.0, icon:"🦇", color:"#6b7280", sub:"Christopher Nolan", bg:"linear-gradient(135deg,#0a0a0a,#1a1a1a)" },
+        { title:"Inception",       year:2010, rating:8.8, icon:"🌀", color:"#3b82f6", sub:"Christopher Nolan", bg:"linear-gradient(135deg,#05051a,#0a0a2d)" },
+        { title:"Interstellar",    year:2014, rating:8.7, icon:"🚀", color:"#6366f1", sub:"Christopher Nolan", bg:"linear-gradient(135deg,#05050f,#0a0a1f)" },
+        { title:"Parasite",        year:2019, rating:8.5, icon:"🏆", color:"#f59e0b", sub:"Bong Joon-ho",      bg:"linear-gradient(135deg,#1a1205,#2d1f0a)" },
+        { title:"Gone Girl",       year:2014, rating:8.1, icon:"🔪", color:"#ef4444", sub:"David Fincher",     bg:"linear-gradient(135deg,#1a0505,#2d0a0a)" },
+        { title:"Oldboy",          year:2003, rating:8.4, icon:"🔥", color:"#f59e0b", sub:"Park Chan-wook",    bg:"linear-gradient(135deg,#1a1205,#2d1f0a)" },
+        { title:"Prisoners",       year:2013, rating:8.1, icon:"🔗", color:"#78716c", sub:"Denis Villeneuve",  bg:"linear-gradient(135deg,#0f0f0f,#1f1f1f)" },
+      ]
+    };
+
+    let allMovies = [], currentGenre = 'all', currentSearch = '', currentTab = 'oscar';
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    function toggleMenu() {
+      document.getElementById('mobile-menu').classList.toggle('open');
+    }
+
+    function showToast(msg, icon = '✅') {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-msg').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function animateCount(el, target, duration = 1200) {
+      let start = 0; const step = Math.ceil(target / (duration / 16));
+      const t = setInterval(() => {
+        start = Math.min(start + step, target);
+        el.textContent = start + '+';
+        if (start >= target) clearInterval(t);
+      }, 16);
+    }
+
+    async function loadMovies() {
+      try {
+        const res = await fetch('/api/movies');
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        allMovies = data.data || [];
+        animateCount(document.getElementById('stat-total'), allMovies.length);
+        buildFilters(); renderMovies();
+      } catch {
+        allMovies = getDemoMovies();
+        animateCount(document.getElementById('stat-total'), allMovies.length);
+        buildFilters(); renderMovies();
+      }
+    }
+
+    function getDemoMovies() {
+      return [
+        { id:1,  title:"Oppenheimer",       genre:"Drama",     release_year:2023, rating:9.6, duration_min:180, director:"Christopher Nolan", badge:"Oscar",    description:"Атомын бөмбөгийг бүтээсэн J. Robert Oppenheimer-ийн эпик биографик кино.", image_url:"https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" },
+        { id:2,  title:"Parasite",          genre:"Thriller",  release_year:2019, rating:8.5, duration_min:132, director:"Bong Joon-ho",      badge:"Oscar",    description:"Нийгмийн тэгш бус байдлыг харуулсан Солонгос кино.",                       image_url:"https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" },
+        { id:3,  title:"Poor Things",       genre:"Drama",     release_year:2023, rating:8.0, duration_min:141, director:"Yorgos Lanthimos",  badge:"Oscar",    description:"Нас барсан эмэгтэйг амилуулсан эрдэмтний тухай хачирхалтай тууж.",        image_url:"" },
+        { id:4,  title:"Spirited Away",     genre:"Anime",     release_year:2001, rating:9.4, duration_min:125, director:"Hayao Miyazaki",    badge:"Anime",    description:"Хүүхэд охин сүнснүүдийн ертөнцөд орж аав ээжээ аварна.",                   image_url:"https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" },
+        { id:5,  title:"Your Name",         genre:"Anime",     release_year:2016, rating:8.9, duration_min:106, director:"Makoto Shinkai",    badge:"Anime",    description:"Хоёр залуу нойрны үед биеийг нь солилцон хувирдаг байна.",                 image_url:"https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg" },
+        { id:6,  title:"Demon Slayer",      genre:"Anime",     release_year:2020, rating:8.2, duration_min:117, director:"Haruo Sotozaki",    badge:"Anime",    description:"Гэр бүлээ алдсан Танжиро дүүгээ аврахаар чөтгөртэй тулалдана.",          image_url:"https://image.tmdb.org/t/p/w500/h8Rb9gBr48ODIwYZ4RKDG3ecQCT.jpg" },
+        { id:7,  title:"Princess Mononoke", genre:"Anime",     release_year:1997, rating:8.4, duration_min:134, director:"Hayao Miyazaki",    badge:"Anime",    description:"Хүн ба байгалийн хоорондох эртний тулаан.",                               image_url:"https://image.tmdb.org/t/p/w500/dS8PBWxdKNiIoaFBMEJ5GRYjpMf.jpg" },
+        { id:8,  title:"Encanto",           genre:"Animation", release_year:2021, rating:7.2, duration_min:102, director:"Byron Howard",      badge:"Disney",   description:"Магадлал бүхий Мадригал гэр бүлд ганц л хүү тусгай чадваргүй.",          image_url:"https://image.tmdb.org/t/p/w500/4j0PNHkMr5ax3IA8tjtxcmPU3QT.jpg" },
+        { id:9,  title:"Coco",              genre:"Animation", release_year:2017, rating:8.4, duration_min:105, director:"Lee Unkrich",       badge:"Disney",   description:"Хөгжимчин хүүхэд нас барагчдын ертөнцөд орон гэр бүлийнхээ нууцыг тайлна.", image_url:"https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg" },
+        { id:10, title:"The Lion King",     genre:"Animation", release_year:1994, rating:8.5, duration_min:88,  director:"Roger Allers",      badge:"Disney",   description:"Хаан арслангийн хүүгийн залгамжилгааны тухай мөнхийн домог.",            image_url:"https://image.tmdb.org/t/p/w500/sKCr78MXSuC3wAA5PbKxBTcXOFH.jpg" },
+        { id:11, title:"Soul",              genre:"Animation", release_year:2020, rating:8.1, duration_min:100, director:"Pete Docter",       badge:"Disney",   description:"Хөгжмийн багш оюун сүнсний ертөнцөд орж амьдралын учир утгыг нээнэ.",   image_url:"https://image.tmdb.org/t/p/w500/hm58Jw4Lw8OIeECIq5Wzqxm5p9.jpg" },
+        { id:12, title:"The Dark Knight",   genre:"Action",    release_year:2008, rating:9.0, duration_min:152, director:"Christopher Nolan", badge:"Legend",   description:"Жокер Готам хотыг эмх замбараагүй болгохоор завдана.",                   image_url:"https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" },
+        { id:13, title:"Inception",         genre:"Thriller",  release_year:2010, rating:8.8, duration_min:148, director:"Christopher Nolan", badge:"Thriller", description:"Зүүдний давхарга дунд нуугдсан оюун сэтгэлийн шинжилгээч.",              image_url:"https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" },
+        { id:14, title:"Interstellar",      genre:"Sci-Fi",    release_year:2014, rating:8.7, duration_min:169, director:"Christopher Nolan", badge:"Epic",     description:"Хүн төрөлхтнийг аврахаар сансрын цагийн нүхийг туулах аялал.",          image_url:"https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lZtvY9fOUGlL.jpg" },
+        { id:15, title:"Oldboy",            genre:"Thriller",  release_year:2003, rating:8.4, duration_min:120, director:"Park Chan-wook",    badge:"Thriller", description:"15 жил хорих байранд хаалттай байсан эр чөлөөлөгдөн өшөөгөө авна.",     image_url:"" },
+      ];
+    }
+
+    function buildFilters() {
+      const genres = [...new Set(allMovies.map(m => m.genre))];
+      const bar = document.getElementById('filter-bar');
+      bar.innerHTML = '<button class="filter-btn active" data-genre="all">Бүгд</button>';
+      genres.forEach(genre => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.genre = genre;
+        btn.textContent = genre;
+        bar.appendChild(btn);
+      });
+      bar.addEventListener('click', e => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentGenre = btn.dataset.genre;
+        renderMovies();
+      });
+    }
+
+    function renderMovies() {
+      const grid = document.getElementById('movie-grid');
+      let list = allMovies;
+      if (currentGenre !== 'all') list = list.filter(m => m.genre === currentGenre);
+      if (currentSearch) list = list.filter(m =>
+        m.title.toLowerCase().includes(currentSearch) ||
+        m.genre.toLowerCase().includes(currentSearch) ||
+        (m.director || '').toLowerCase().includes(currentSearch)
+      );
+      if (!list.length) {
+        grid.innerHTML = `<div class="no-results"><div class="nr-icon">🎬</div><p>КИНО ОЛДСОНГҮЙ</p></div>`;
+        return;
+      }
+      const badgeColors = { Oscar:'#f59e0b', Anime:'#a78bfa', Disney:'#38bdf8', Legend:'#6366f1', Thriller:'#ef4444', Epic:'#10b981', default:'#1e6fff' };
+      grid.innerHTML = list.map((m, i) => {
+        const cfg = genreConfig[m.genre] || { bg:'linear-gradient(135deg,#0a0e17,#050810)', color:'#1e6fff', icon:'🎬' };
+        const bc = badgeColors[m.badge] || badgeColors.default;
+        return `
+          <div class="movie-card" style="animation-delay:${i * 0.06}s" onclick="showToast('${m.title} — Тун удахгүй!', '🎬')">
+            <div class="img-box">
+              ${m.image_url
+                ? `<img src="${m.image_url}" alt="${m.title}" loading="lazy">`
+                : `<div class="img-placeholder" style="background:${cfg.bg}">
+                     <div class="ph-icon">${cfg.icon}</div>
+                     <div class="ph-title">${m.title}</div>
+                     <div class="ph-genre" style="color:${cfg.color}">${m.genre}</div>
+                   </div>`}
+              <div class="overlay-content">
+                ${m.rating ? `<div class="overlay-rating">${m.rating}</div><div class="overlay-rating-label">ҮНЭЛГЭЭ / 10</div>` : ''}
+                <p class="overlay-desc">${m.description || 'Тайлбар байхгүй байна.'}</p>
+                <div class="overlay-meta">
+                  ${m.duration_min ? `<span>${m.duration_min} мин</span>` : ''}
+                  ${m.director ? `<span>• ${m.director}</span>` : ''}
+                </div>
+                <button class="overlay-btn">ДЭЛГЭРЭНГҮЙ</button>
+              </div>
+            </div>
+            <div class="card-footer">
+              <div class="meta-top">
+                <span class="genre-tag" style="background:${cfg.color}22;color:${cfg.color}">${m.genre}</span>
+                ${m.badge ? `<span class="card-badge" style="background:${bc}22;color:${bc}">${m.badge}</span>` : ''}
+              </div>
+              <div class="card-title">${m.title}</div>
+              <div class="card-meta">
+                <span>${m.release_year || '—'}</span>
+                ${m.duration_min ? `<div class="dot"></div><span>${m.duration_min} мин</span>` : ''}
+                ${m.rating ? `<div class="dot"></div><span style="color:#f59e0b">★ ${m.rating}</span>` : ''}
+              </div>
+              ${m.director ? `<div class="card-director">${m.director}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderFeatured(tab) {
+      const items = featuredData[tab] || [];
+      const grid = document.getElementById('featured-grid');
+      const starStr = (r) => '★'.repeat(Math.round(r / 2)) + '☆'.repeat(5 - Math.round(r / 2));
+      grid.innerHTML = items.map((item, i) => `
+        <div class="featured-card" style="opacity:0;animation:cardIn 0.4s ${i*0.06}s ease forwards"
+             onclick="showToast('${item.title} — Тун удахгүй!', '🎬')">
+          <div class="fc-placeholder" style="background:${item.bg}">
+            <div class="fc-bg-icon">${item.icon}</div>
+            <div class="fc-line" style="background:${item.color}"></div>
+            <div class="fc-title-text">${item.title}</div>
+            <div class="fc-sub-text">${item.sub}</div>
+          </div>
+          <div class="featured-overlay">
+            <div class="fo-stars">${starStr(item.rating)}</div>
+            <div class="fo-rating">★ ${item.rating}</div>
+            <div class="fo-title">${item.title}</div>
+            <div class="fo-year">${item.year} · ${item.sub}</div>
+          </div>
+          <div class="fo-hover-info">
+            <div class="fo-play-btn">
+              <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+            </div>
+          </div>
+          <div class="fo-badge" style="background:${item.color}25;color:${item.color};border:1px solid ${item.color}40">${item.sub.split(' ')[0]}</div>
+          <div class="fo-rank">${String(i+1).padStart(2,'0')}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('featured-tabs').addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      renderFeatured(currentTab);
+    });
+
+    function handleSearch(val) {
+      currentSearch = val.toLowerCase().trim();
+      renderMovies();
+      if (currentSearch) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-genre="all"]').classList.add('active');
+        currentGenre = 'all';
+      }
+    }
+    document.getElementById('search-input').addEventListener('input', e => handleSearch(e.target.value));
+    document.getElementById('mob-search').addEventListener('input', e => handleSearch(e.target.value));
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMovies();
+      renderFeatured('oscar');
+    });
+
+    // ── Animated star canvas ──────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('star-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+
+      function resize() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+
+      function createStars() {
+        stars = [];
+        for (let i = 0; i < 200; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 1.6 + 0.2,
+            alpha: Math.random(),
+            speed: Math.random() * 0.007 + 0.002,
+            drift: (Math.random() - 0.5) * 0.12,
+            blue: Math.random() > 0.8,
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(s => {
+          s.alpha += s.speed;
+          if (s.alpha > 1 || s.alpha < 0) s.speed *= -1;
+          s.x += s.drift;
+          if (s.x < 0) s.x = canvas.width;
+          if (s.x > canvas.width) s.x = 0;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = s.blue
+            ? `rgba(99,162,241,${s.alpha})`
+            : `rgba(255,255,255,${s.alpha * 0.9})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+
+      resize(); createStars(); draw();
+      window.addEventListener('resize', () => { resize(); createStars(); });
+    })();
+  </script>
+</body>
+</html>
